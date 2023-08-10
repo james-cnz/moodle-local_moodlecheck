@@ -400,31 +400,18 @@ class local_moodlecheck_file {
                             // To address this we modify the tokens to match the PHP 8.0 format.
                             // This is a bit of a hack, but it works.
                             // Note: argtokens contains arrays of [token index, string content, line number].
-                            for ($j = 0; $j < count($argtokens); $j++) {
-                                if ($argtokens[$j][0] === T_NS_SEPARATOR && count($argtokens) > $j + 1) {
-                                    // If the token is a literal backslash, then
+                            for ($j = 0; $j <= max(array_keys($argtokens)); $j++) {
+                                if ($argtokens[$j][0] === T_NS_SEPARATOR || $argtokens[$j][0] === T_STRING) {
+                                    // If the token is a namespace token, then
                                     // append future tokens until we find a non-namespace token.
                                     $argtokens[$j][0] = T_STRING;
                                     $initialtoken = $j;
-                                    for ($namespacetoken = $j + 1; $namespacetoken < count($argtokens); $namespacetoken++) {
-                                        switch ($argtokens[$namespacetoken][1]) {
-                                            case '|':
-                                            case '=':
-                                                break 2;
-                                        }
-                                        $argtokens[$initialtoken][1] .= $argtokens[$namespacetoken][1];
-                                        unset($argtokens[$namespacetoken]);
-                                        $j = $namespacetoken;
-                                    }
-                                } else if (count($argtokens) <= $j && $argtokens[$j + 1][0] === T_NS_SEPARATOR) {
-                                    // If the next token is a literal backslash, then
-                                    // append future tokens until we find a non-namespace token.
-                                    $argtokens[$j][0] = T_STRING;
-                                    $initialtoken = $j;
-                                    for ($namespacetoken = $j + 1; $namespacetoken < count($argtokens); $namespacetoken++) {
-                                        switch ($argtokens[$namespacetoken][1]) {
-                                            case '|':
-                                            case '=':
+                                    for ($namespacetoken = $j + 1; $namespacetoken <= max(array_keys($argtokens)); $namespacetoken++) {
+                                        switch ($argtokens[$namespacetoken][0]) {
+                                            case T_STRING:
+                                            case T_NS_SEPARATOR:
+                                                break;
+                                            default:
                                                 break 2;
                                         }
                                         $argtokens[$initialtoken][1] .= $argtokens[$namespacetoken][1];
